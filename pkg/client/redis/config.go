@@ -69,7 +69,7 @@ func DefaultConfig() *Config {
 		WriteTimeout:          cast.ToDuration("1s"),
 		ContextTimeoutEnabled: true,
 		Debug:                 false,
-		EnableAccessLog:       true,
+		EnableAccessLog:       false,
 		EnableTrace:           true,
 		EnableMetric:          true,
 		logger:                xlog.With(xlog.String("mod", "client.redis")),

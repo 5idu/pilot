@@ -4,20 +4,17 @@ import (
 	"context"
 	"time"
 
-	"github.com/5idu/pilot/pkg/xmetric"
-
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
 )
 
 type Client struct {
 	*mongo.Client
-	config          *Config
-	metricCallbacks []metric.Registration
+	config *Config
+	// metricCallbacks []metric.Registration
 }
 
 func newClient(config *Config) *Client {
@@ -29,6 +26,9 @@ func newClient(config *Config) *Client {
 	clientOpts := options.Client()
 	clientOpts.MaxPoolSize = &mps
 	clientOpts.SocketTimeout = &config.SocketTimeout
+	if config.EnableTrace {
+		clientOpts.Monitor = otelmongo.NewMonitor()
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -46,18 +46,18 @@ func newClient(config *Config) *Client {
 	}
 	_instances.Store(config.Name, c)
 
-	if config.EnableMetric {
-		cb, err := xmetric.MongoDBClientSession.Observe(func(ctx context.Context, o metric.Observer) error {
-			o.ObserveInt64(xmetric.MongoDBClientSession.Int64ObservableUpDownCounter, int64(client.NumberSessionsInProgress()),
-				attribute.String("name", config.Name),
-			)
-			return nil
-		})
-		if err != nil {
-			panic(errors.WithMessage(err, "register metric callback"))
-		}
-		c.metricCallbacks = append(c.metricCallbacks, cb)
-	}
+	// if config.EnableMetric {
+	// 	cb, err := xmetric.MongoDBClientSession.Observe(func(ctx context.Context, o metric.Observer) error {
+	// 		o.ObserveInt64(xmetric.MongoDBClientSession.Int64ObservableUpDownCounter, int64(client.NumberSessionsInProgress()),
+	// 			attribute.String("name", config.Name),
+	// 		)
+	// 		return nil
+	// 	})
+	// 	if err != nil {
+	// 		panic(errors.WithMessage(err, "register metric callback"))
+	// 	}
+	// 	c.metricCallbacks = append(c.metricCallbacks, cb)
+	// }
 
 	return c
 }
@@ -71,11 +71,11 @@ func (c *Client) NewDatabase(dbname string) *Database {
 }
 
 func (c *Client) Close() error {
-	if len(c.metricCallbacks) > 0 {
-		for _, cb := range c.metricCallbacks {
-			cb.Unregister()
-		}
-	}
+	// if len(c.metricCallbacks) > 0 {
+	// 	for _, cb := range c.metricCallbacks {
+	// 		cb.Unregister()
+	// 	}
+	// }
 	return c.Client.Disconnect(context.Background())
 }
 

@@ -2,7 +2,9 @@ package xecho
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/5idu/pilot/pkg/xlog"
@@ -31,6 +33,7 @@ func recoverMiddleware(logger *xlog.Logger, slowQueryThresholdInMilli int64) ech
 					"path":   ctx.Request().URL.Path,
 				}
 				if rec := recover(); rec != nil {
+					log.Println(getCurrentGoroutineStack())
 					switch rec := rec.(type) {
 					case error:
 						err = rec
@@ -54,6 +57,13 @@ func recoverMiddleware(logger *xlog.Logger, slowQueryThresholdInMilli int64) ech
 			return next(ctx)
 		}
 	}
+}
+
+// getCurrentGoroutineStack 获取当前Goroutine的调用栈，便于排查panic异常
+func getCurrentGoroutineStack() string {
+	var buf [4096]byte
+	n := runtime.Stack(buf[:], false)
+	return string(buf[:n])
 }
 
 func traceServerInterceptor() echo.MiddlewareFunc {
