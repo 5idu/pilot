@@ -3,6 +3,7 @@ package conf
 import (
 	"encoding/json"
 	"log"
+	"net/url"
 	"path/filepath"
 
 	"github.com/5idu/pilot/pkg/flag"
@@ -28,9 +29,13 @@ func init() {
 		if err != nil {
 			log.Fatalf("build datasource[%s] failed: %v", configAddr, err)
 		}
+		path := configAddr
+		if uri, err := url.ParseRequestURI(configAddr); err == nil {
+			path = uri.Path
+		}
 
 		unmarshaler := yaml.Unmarshal
-		switch filepath.Ext(configAddr) {
+		switch filepath.Ext(path) {
 		case ".yaml", ".yml":
 			unmarshaler = yaml.Unmarshal
 		case ".json":
