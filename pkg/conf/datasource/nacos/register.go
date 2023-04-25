@@ -18,13 +18,14 @@ func init() {
 	conf.Register(DataSourceNacos, func() conf.DataSource {
 		var (
 			configAddr = flag.String("config")
+			watch      = flag.Bool("watch")
 		)
 		if configAddr == "" {
 			xlog.Panic("new nacos dataSource, configAddr is empty")
 			return nil
 		}
 		// configAddr is a string in this format:
-		// nacos://ip:port?data_id=xx&group=xx&namespace_id=xx&timeout=10000&access_key=xx&secret_key=xx&not_load_cache_at_start=true&update_cache_when_empty=true
+		// nacos://ip:port?dataId=xx&group=xx&namespaceId=xx&timeout=10000&accessKey=xx&secretKey=xx&notLoadCacheAtStart=true&updateCacheWhenEmpty=true
 		urlObj, err := xnet.ParseURL(configAddr)
 		if err != nil {
 			xlog.Panic("parse configAddr error", xlog.Any("error", err))
@@ -33,11 +34,11 @@ func init() {
 		// create clientConfig
 		clientConfig := constant.ClientConfig{
 			TimeoutMs:            urlObj.QueryUint64("timeout", 10000),
-			NotLoadCacheAtStart:  urlObj.QueryBool("not_load_cache_at_start", true),
-			UpdateCacheWhenEmpty: urlObj.QueryBool("update_cache_when_empty", true),
-			NamespaceId:          urlObj.Query().Get("namespace_id"),
-			AccessKey:            urlObj.Query().Get("access_key"),
-			SecretKey:            urlObj.Query().Get("secret_key"),
+			NotLoadCacheAtStart:  urlObj.QueryBool("notLoadCacheAtStart", true),
+			UpdateCacheWhenEmpty: urlObj.QueryBool("updateCacheWhenEmpty", true),
+			NamespaceId:          urlObj.Query().Get("namespaceId"),
+			AccessKey:            urlObj.Query().Get("accessKey"),
+			SecretKey:            urlObj.Query().Get("secretKey"),
 		}
 		// create serverConfigs
 		serverConfigs := []constant.ServerConfig{
@@ -57,7 +58,7 @@ func init() {
 			xlog.Panic("create config client error", xlog.Any("error", err))
 			return nil
 		}
-		return NewDataSource(client, urlObj.Query().Get("group"), urlObj.Query().Get("data_id"))
+		return NewDataSource(client, urlObj.Query().Get("group"), urlObj.Query().Get("dataId"), watch)
 	})
 }
 

@@ -15,6 +15,7 @@ func init() {
 	conf.Register(DataSourceEtcdv3, func() conf.DataSource {
 		var (
 			configAddr = flag.String("config")
+			watch      = flag.Bool("watch")
 		)
 		if configAddr == "" {
 			xlog.Panic("new etcd dataSource, configAddr is empty")
@@ -37,6 +38,6 @@ func init() {
 		etcdConf.CaCert = urlObj.Query().Get("caCert")
 		etcdConf.UserName = urlObj.Query().Get("username")
 		etcdConf.Password = urlObj.Query().Get("password")
-		return NewDataSource(etcdConf.MustBuild(), urlObj.Query().Get("key"))
+		return NewDataSource(etcdConf.MustBuild(), urlObj.Query().Get("key"), watch)
 	})
 }

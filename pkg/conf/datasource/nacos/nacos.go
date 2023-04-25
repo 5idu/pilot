@@ -17,15 +17,18 @@ type nacosDataSource struct {
 	changed chan struct{}
 }
 
-// NewDataSource creates an apolloDataSource
-func NewDataSource(client config_client.IConfigClient, group, dataID string) conf.DataSource {
+// NewDataSource creates an nacosDataSource
+func NewDataSource(client config_client.IConfigClient, group, dataID string, watch bool) conf.DataSource {
 	ds := &nacosDataSource{
 		client:  client,
 		group:   group,
 		dataID:  dataID,
 		changed: make(chan struct{}, 1),
 	}
-	xgo.Go(ds.watch)
+	if watch {
+		ds.changed = make(chan struct{}, 1)
+		xgo.Go(ds.watch)
+	}
 	return ds
 }
 
