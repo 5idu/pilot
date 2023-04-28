@@ -10,6 +10,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var (
@@ -63,6 +64,8 @@ func newClient(config *Config) (*Client, error) {
 	}
 	if config.Debug {
 		inner = inner.Debug()
+	} else {
+		inner.Logger = logger.Default.LogMode(logger.Silent)
 	}
 
 	if config.EnableTrace {
